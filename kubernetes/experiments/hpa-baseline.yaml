@@ -1,0 +1,34 @@
+# Baseline for experiments ONLY (method B: reactive Kubernetes HPA).
+# Applied and removed by `python -m experiments.run_experiment --mode live`;
+# while it exists CostWise must run in observe mode (the live harness does this),
+# otherwise two autoscalers would fight over spec.replicas.
+# Requires: minikube addons enable metrics-server
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: marketplace-hpa-baseline
+  namespace: costwise
+  labels:
+    app.kubernetes.io/part-of: costwise
+    costwise/experiment: baseline
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: marketplace
+  minReplicas: 1
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        # 70% of the 250m CPU limit - the same target load CostWise plans for
+        # (Utilization would be relative to the 100m *request* and scale far earlier).
+        target: {type: AverageValue, averageValue: 175m}
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies: [{type: Pods, value: 4, periodSeconds: 15}]
+    scaleDown:
+      stabilizationWindowSeconds: 60
+      policies: [{type: Pods, value: 3, periodSeconds: 15}]

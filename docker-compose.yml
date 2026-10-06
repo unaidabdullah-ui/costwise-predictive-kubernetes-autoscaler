@@ -1,0 +1,40 @@
+# Run CostWise WITHOUT Kubernetes (Docker only) - useful to explore the store, the
+# traffic generator, Prometheus and the dashboard. There is no cluster to scale here,
+# so the control plane runs with SCALER_BACKEND=dry-run and the dashboard says so.
+# The real autoscaling demo is start-demo.ps1 (Minikube).
+#   docker compose up --build      ->  http://127.0.0.1:8000  and  http://127.0.0.1:8080
+services:
+  marketplace:
+    build: {context: ., dockerfile: docker/marketplace/Dockerfile}
+    image: costwise-marketplace:2.1.0
+    command: ["python", "-m", "marketplace"]
+    environment: {POD_NAME: compose-marketplace}
+    ports: ["127.0.0.1:8080:8080"]
+    cpus: 0.25
+    mem_limit: 192m
+  traffic-generator:
+    image: costwise-marketplace:2.1.0
+    command: ["python", "-m", "workload_generator"]
+    depends_on: [marketplace]
+    environment:
+      TARGET_URL: http://marketplace:8080
+      CONTROL_TOKEN: ${CONTROL_TOKEN:?set CONTROL_TOKEN to a random value, e.g. in a local .env}
+    ports: ["127.0.0.1:8089:8089"]
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=2h"]
+    volumes:
+      - ./docker/compose-prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+    ports: ["127.0.0.1:9090:9090"]
+  control-plane:
+    build: {context: ., dockerfile: docker/control-plane/Dockerfile}
+    image: costwise-control-plane:2.1.0
+    depends_on: [prometheus, traffic-generator]
+    environment:
+      SCALER_BACKEND: dry-run
+      PROMETHEUS_URL: http://prometheus:9090
+      GENERATOR_URL: http://traffic-generator:8089
+      MARKETPLACE_URL: http://marketplace:8080
+      CONTROL_TOKEN: ${CONTROL_TOKEN}
+    ports: ["127.0.0.1:8000:8000"]

@@ -1,0 +1,3 @@
+# Marketplace + traffic-generator image (small: no NumPy, no Kubernetes client).
+starlette>=0.37,<2
+uvicorn>=0.29,<1

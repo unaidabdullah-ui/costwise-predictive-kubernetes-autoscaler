@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CostWise Marketplace</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/store.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top">
+    <div class="top-row">
+      <a class="brand" href="#/" aria-label="CostWise Marketplace home">
+        <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="8" fill="#14b8a6"/><path d="M9 12h14l-2 9H11z" fill="none" stroke="#04231f" stroke-width="2.4" stroke-linejoin="round"/><circle cx="13" cy="24" r="1.6" fill="#04231f"/><circle cx="19" cy="24" r="1.6" fill="#04231f"/></svg>
+        <span><b>COSTWISE</b> MARKETPLACE</span>
+      </a>
+      <form class="search" id="search-form" role="search">
+        <label class="sr" for="search-input">Search products</label>
+        <input id="search-input" type="search" placeholder="Search earbuds, tea, sneakers…" autocomplete="off">
+        <button type="submit" aria-label="Search"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+      </form>
+      <nav class="top-links" aria-label="Account">
+        <a href="#/orders">Orders</a>
+        <a href="#/cart" class="cart-link" aria-label="Cart"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M3 4h2.5l2.2 11h10.6L21 8H7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.5" fill="currentColor"/><circle cx="17" cy="19.5" r="1.5" fill="currentColor"/></svg><span>Cart</span><span class="badge" id="cart-count">0</span></a>
+      </nav>
+    </div>
+    <nav class="cats" id="cat-nav" aria-label="Categories"></nav>
+  </header>
+  <div class="demo-note" role="note">Demo store for the CostWise autoscaling project. Products, prices and orders are simulated — nothing is sold or shipped.</div>
+  <main id="main" tabindex="-1"></main>
+  <footer class="foot">
+    <span>COSTWISE MARKETPLACE · original demo application</span>
+    <span id="served-by" title="The Kubernetes pod that answered the last request">served by —</span>
+  </footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/static/store.js" type="module"></script>
+</body>
+</html>

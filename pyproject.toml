@@ -1,0 +1,46 @@
+[project]
+name = "costwise"
+version = "2.1.0"
+description = "CostWise - predictive & cost-aware Kubernetes autoscaling with an LSTM forecaster (demo platform)"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24,<3",
+    "requests>=2.31,<3",
+    "starlette>=0.37,<2",
+    "uvicorn>=0.29,<1",
+    "kubernetes>=29,<33",
+]
+
+[project.optional-dependencies]
+experiments = ["pandas>=2.0,<3", "matplotlib>=3.7,<4"]
+torch = ["torch>=2.2", "scikit-learn>=1.3", "pandas>=2.0,<3"]
+dev = ["pytest>=8", "httpx>=0.27", "ruff>=0.5", "mypy>=1.10", "pyyaml>=6", "types-requests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "slow: starts real processes (marketplace, generator) on loopback ports",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+extend-exclude = ["experiments/results"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM"]
+ignore = ["S101", "S311", "S603", "S607", "E501", "SIM105"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "B"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_ignores = false
+no_implicit_optional = true
+check_untyped_defs = true
+exclude = ["experiments/results", "tests/"]

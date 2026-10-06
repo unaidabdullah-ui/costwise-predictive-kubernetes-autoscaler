@@ -1,0 +1,4 @@
+# Offline experiments, charts and the optional PyTorch tooling.
+-r control-plane.txt
+pandas>=2.0,<3
+matplotlib>=3.7,<4

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CostWise Control Room</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <a class="skip" href="#view">Skip to content</a>
+  <header class="hdr">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true"><rect x="2" y="2" width="36" height="36" rx="10" fill="var(--accent)"/><path d="M11 26 L17 18 L22 22 L29 12" fill="none" stroke="var(--accent-ink)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="29" cy="12" r="2.6" fill="var(--accent-ink)"/></svg>
+      <div>
+        <div class="logo">COSTWISE</div>
+        <div class="tagline">Predictive &amp; Cost-Aware Kubernetes Autoscaling</div>
+      </div>
+    </div>
+    <div class="pills" id="pills" role="status" aria-live="polite" aria-label="System health"></div>
+    <nav class="hdr-nav" aria-label="Pages">
+      <a href="#/" data-nav="dashboard">Control room</a>
+      <a href="#/technical" data-nav="technical">Technical details</a>
+      <a href="#/architecture" data-nav="architecture">Architecture</a>
+      <button class="icon-btn" id="present-btn" title="Presentation mode (P)" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 16v4M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Present</span>
+      </button>
+      <button class="icon-btn" id="theme-btn" title="Light / dark theme" aria-label="Toggle light or dark theme">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="currentColor"/></svg>
+      </button>
+    </nav>
+  </header>
+  <main id="view" tabindex="-1"></main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/static/app.js" type="module"></script>
+</body>
+</html>

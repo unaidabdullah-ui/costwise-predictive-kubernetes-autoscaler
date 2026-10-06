@@ -1,0 +1,10 @@
+# Core resources (Prometheus config is created by start-demo from prometheus/).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - service-account.yaml
+  - rbac.yaml
+  - marketplace.yaml
+  - traffic-generator.yaml
+  - monitoring/prometheus.yaml

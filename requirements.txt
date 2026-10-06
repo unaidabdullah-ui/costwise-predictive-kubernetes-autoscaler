@@ -1,0 +1,3 @@
+# Everything needed to run the demo and the experiments on your laptop.
+# (Inside Minikube the images only use requirements/marketplace.txt.)
+-r requirements/experiments.txt

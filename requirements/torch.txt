@@ -1,0 +1,5 @@
+# OPTIONAL: PyTorch LSTM (ml/src/train.py). Not needed for the demo, which uses the
+# NumPy LSTM (ml/src/lite.py). CPU wheels are enough; an NVIDIA GPU is used if present.
+-r experiments.txt
+torch>=2.2
+scikit-learn>=1.3

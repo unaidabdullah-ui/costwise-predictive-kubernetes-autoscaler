@@ -1,0 +1,71 @@
+# OPTIONAL: run the CostWise control plane inside the cluster instead of on the laptop.
+# The default demo does NOT use this (fewer moving parts, less RAM). To try it:
+#   minikube image build -t costwise-control-plane:2.1.0 -f docker/control-plane/Dockerfile .
+#   kubectl apply -f kubernetes/optional/control-plane.yaml
+#   kubectl -n costwise port-forward svc/costwise-control-plane 8000:8000
+# It uses the same least-privilege ServiceAccount/Role (kubernetes/rbac.yaml); here the
+# token is mounted by Kubernetes instead of being written to .costwise/kubeconfig.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: costwise-control-plane
+  namespace: costwise
+  labels: {app: costwise-control-plane, app.kubernetes.io/part-of: costwise}
+spec:
+  replicas: 1                      # exactly one controller must own spec.replicas
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: costwise-control-plane}
+  template:
+    metadata:
+      labels: {app: costwise-control-plane, app.kubernetes.io/part-of: costwise}
+    spec:
+      serviceAccountName: cost-aware-autoscaler
+      automountServiceAccountToken: true
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: control-plane
+          image: costwise-control-plane:2.1.0
+          imagePullPolicy: Never
+          ports:
+            - {name: http, containerPort: 8000}
+          env:
+            - {name: DASHBOARD_HOST, value: "0.0.0.0"}
+            - {name: SCALER_BACKEND, value: kubernetes}
+            - {name: KUBERNETES_NAMESPACE, value: costwise}
+            - {name: PROMETHEUS_URL, value: "http://prometheus.costwise.svc.cluster.local:9090"}
+            - {name: PROMETHEUS_PUBLIC_URL, value: "http://127.0.0.1:9090"}
+            - {name: GENERATOR_URL, value: "http://traffic-generator.costwise.svc.cluster.local:8089"}
+            - {name: MARKETPLACE_URL, value: "http://marketplace.costwise.svc.cluster.local:80"}
+            - {name: LOG_FORMAT, value: json}
+            - name: CONTROL_TOKEN
+              valueFrom:
+                secretKeyRef: {name: costwise-secrets, key: control-token}
+          resources:
+            requests: {cpu: 100m, memory: 160Mi}
+            limits: {cpu: 500m, memory: 384Mi}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+              httpHeaders: [{name: Host, value: "127.0.0.1"}]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: ["ALL"]}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: costwise-control-plane
+  namespace: costwise
+  labels: {app: costwise-control-plane, app.kubernetes.io/part-of: costwise}
+spec:
+  selector: {app: costwise-control-plane}
+  ports:
+    - {name: http, port: 8000, targetPort: http}

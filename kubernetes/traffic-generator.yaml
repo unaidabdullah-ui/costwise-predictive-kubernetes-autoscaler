@@ -1,0 +1,74 @@
+# Simulated shoppers: sends real HTTP requests to the marketplace Service.
+# Its control API (scenario changes) requires the token from the
+# costwise-secrets Secret, which start-demo creates with a random value.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traffic-generator
+  namespace: costwise
+  labels:
+    app: traffic-generator
+    app.kubernetes.io/name: traffic-generator
+    app.kubernetes.io/part-of: costwise
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: traffic-generator
+  template:
+    metadata:
+      labels:
+        app: traffic-generator
+        app.kubernetes.io/name: traffic-generator
+        app.kubernetes.io/part-of: costwise
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 5
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: traffic-generator
+          image: costwise-marketplace:2.1.0
+          imagePullPolicy: Never
+          command: ["python", "-m", "workload_generator"]
+          ports:
+            - {name: http, containerPort: 8089}
+          env:
+            - {name: TARGET_URL, value: "http://marketplace.costwise.svc.cluster.local:80"}
+            - {name: GENERATOR_PORT, value: "8089"}
+            - {name: WORKLOAD_RATE, value: "0.04"}
+            - {name: GENERATOR_WORKERS, value: "64"}
+            - {name: INITIAL_SCENARIO, value: "stopped"}
+            - {name: LOG_FORMAT, value: "json"}
+            - name: CONTROL_TOKEN
+              valueFrom:
+                secretKeyRef: {name: costwise-secrets, key: control-token}
+          resources:
+            requests: {cpu: 100m, memory: 64Mi}
+            limits: {cpu: 500m, memory: 192Mi}
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traffic-generator
+  namespace: costwise
+  labels:
+    app: traffic-generator
+    app.kubernetes.io/part-of: costwise
+spec:
+  selector:
+    app: traffic-generator
+  ports:
+    - {name: http, port: 8089, targetPort: http}

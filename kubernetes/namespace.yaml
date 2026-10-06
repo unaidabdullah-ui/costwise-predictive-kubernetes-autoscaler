@@ -1,0 +1,12 @@
+# Everything CostWise runs lives in this namespace. Pod Security Admission
+# enforces the "restricted" profile: non-root, no privilege escalation, no
+# capabilities, RuntimeDefault seccomp.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: costwise
+  labels:
+    app.kubernetes.io/part-of: costwise
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted

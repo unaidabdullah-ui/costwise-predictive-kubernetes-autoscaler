@@ -1,0 +1,42 @@
+# Least-privilege RBAC for the CostWise controller (namespace-scoped Role,
+# no ClusterRole, no cluster-admin).
+#
+#   deployments          get, list, watch    read replicas and rollout status
+#   deployments/scale    get, patch, update  the ONLY write: change spec.replicas
+#   pods, events         get, list, watch    pod tiles and the event list on the dashboard
+#
+# It cannot create, delete or edit Deployments, Pods, Secrets, ConfigMaps or RBAC,
+# and it cannot touch any other namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: costwise-autoscaler
+  namespace: costwise
+  labels:
+    app.kubernetes.io/part-of: costwise
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: [""]
+    resources: ["pods", "events"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: costwise-autoscaler
+  namespace: costwise
+  labels:
+    app.kubernetes.io/part-of: costwise
+subjects:
+  - kind: ServiceAccount
+    name: cost-aware-autoscaler
+    namespace: costwise
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: costwise-autoscaler

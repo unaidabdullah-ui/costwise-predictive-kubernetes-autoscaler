@@ -1,0 +1,5 @@
+# CostWise control plane on your laptop (python -m costwise): controller + dashboard.
+-r marketplace.txt
+numpy>=1.24,<3
+requests>=2.31,<3
+kubernetes>=29,<33

@@ -1,0 +1,50 @@
+# Prometheus configuration used inside Minikube (namespace costwise).
+# Scrapes every marketplace pod and the traffic generator every 5 s through
+# Kubernetes pod discovery limited to this namespace.
+global:
+  scrape_interval: 5s
+  scrape_timeout: 4s
+  evaluation_interval: 5s
+  external_labels:
+    project: costwise
+
+rule_files:
+  - /etc/prometheus/costwise-alerts.yml
+
+scrape_configs:
+  - job_name: marketplace
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces: {names: [costwise]}
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: marketplace
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_container_port_name]
+        regex: http
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_phase]
+        regex: Running
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+
+  - job_name: traffic-generator
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces: {names: [costwise]}
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: traffic-generator
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_container_port_name]
+        regex: http
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

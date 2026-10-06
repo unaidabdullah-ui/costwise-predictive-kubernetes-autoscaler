@@ -1,0 +1,113 @@
+# Prometheus for the demo (2 h retention, emptyDir, ~150-250 MiB RAM).
+# Configuration comes from the ConfigMap "prometheus-config", which start-demo
+# creates from prometheus/prometheus.yml and prometheus/rules/costwise-alerts.yml:
+#   kubectl -n costwise create configmap prometheus-config \
+#     --from-file=prometheus.yml=prometheus/prometheus.yml \
+#     --from-file=costwise-alerts.yml=prometheus/rules/costwise-alerts.yml \
+#     --dry-run=client -o yaml | kubectl apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: costwise
+  labels: {app.kubernetes.io/part-of: costwise}
+---
+# Service discovery only: list/watch pods in this namespace (read-only).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prometheus-discovery
+  namespace: costwise
+  labels: {app.kubernetes.io/part-of: costwise}
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prometheus-discovery
+  namespace: costwise
+  labels: {app.kubernetes.io/part-of: costwise}
+subjects:
+  - {kind: ServiceAccount, name: prometheus, namespace: costwise}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: prometheus-discovery
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: costwise
+  labels:
+    app: prometheus
+    app.kubernetes.io/part-of: costwise
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels: {app: prometheus}
+  strategy: {type: Recreate}
+  template:
+    metadata:
+      labels:
+        app: prometheus
+        app.kubernetes.io/part-of: costwise
+    spec:
+      serviceAccountName: prometheus
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.53.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            - --storage.tsdb.retention.time=2h
+            - --web.listen-address=:9090
+          ports:
+            - {name: http, containerPort: 9090}
+          resources:
+            requests: {cpu: 100m, memory: 160Mi}
+            limits: {cpu: 500m, memory: 400Mi}
+          readinessProbe:
+            httpGet: {path: /-/ready, port: http}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /-/healthy, port: http}
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+          volumeMounts:
+            - {name: config, mountPath: /etc/prometheus, readOnly: true}
+            - {name: data, mountPath: /prometheus}
+      volumes:
+        - name: config
+          configMap: {name: prometheus-config}
+        - name: data
+          emptyDir: {sizeLimit: 512Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: costwise
+  labels:
+    app: prometheus
+    app.kubernetes.io/part-of: costwise
+spec:
+  selector: {app: prometheus}
+  ports:
+    - {name: http, port: 9090, targetPort: http}

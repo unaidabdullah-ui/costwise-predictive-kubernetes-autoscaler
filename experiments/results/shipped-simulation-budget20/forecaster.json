@@ -1,0 +1,31 @@
+{
+  "name": "lstm_lite",
+  "label": "LSTM",
+  "horizon": 6,
+  "sequence_length": 12,
+  "uncertainty_rmse": 6.5747045213354545,
+  "architecture": "LSTM(32) \u2192 Linear \u2192 ReLU \u2192 Linear(6)",
+  "parameters": 5990,
+  "step_seconds": 5.0,
+  "horizon_seconds": 30.0,
+  "history_seconds": 60.0,
+  "trained_at": "2026-10-04T16:22:49+00:00",
+  "training_seconds": 9.5,
+  "test_mae": 2.289644632407284,
+  "test_rmse": 4.121893026882717,
+  "test_mape": 13.828047561383794,
+  "naive_rmse": 8.444491532815698,
+  "rmse_improvement_vs_naive_pct": 51.188381078187554,
+  "data": {
+    "bootstrap_series": 120,
+    "bootstrap_points": 22615,
+    "bootstrap_label": "synthetic: simulated demo traffic plans + generic patterns, measured like Prometheus",
+    "observed_series": 0,
+    "observed_points": 0,
+    "observed_label": "real: request rate measured by Prometheus during your demos",
+    "train_windows": 13734,
+    "validation_windows": 1373,
+    "test_windows": 1441
+  },
+  "model_file": "lstm_lite.npz"
+}

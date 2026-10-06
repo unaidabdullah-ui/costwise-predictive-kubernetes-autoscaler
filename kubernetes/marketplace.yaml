@@ -1,0 +1,87 @@
+# COSTWISE MARKETPLACE - the application CostWise autoscales.
+# Image is built inside Minikube by start-demo (`minikube image build`), so
+# imagePullPolicy is Never: no registry and no ErrImagePull.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marketplace
+  namespace: costwise
+  labels:
+    app: marketplace
+    app.kubernetes.io/name: marketplace
+    app.kubernetes.io/part-of: costwise
+spec:
+  replicas: 1                      # CostWise owns this value at runtime (1-8)
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: marketplace
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
+  template:
+    metadata:
+      labels:
+        app: marketplace
+        app.kubernetes.io/name: marketplace
+        app.kubernetes.io/part-of: costwise
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 10
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: marketplace
+          image: costwise-marketplace:2.1.0
+          imagePullPolicy: Never
+          command: ["python", "-m", "marketplace"]
+          ports:
+            - {name: http, containerPort: 8080}
+          env:
+            - name: POD_NAME
+              valueFrom: {fieldRef: {fieldPath: metadata.name}}
+            - {name: MARKETPLACE_PORT, value: "8080"}
+            - {name: MARKETPLACE_WORK_SCALE, value: "1.0"}
+            - {name: MARKETPLACE_MAX_INFLIGHT, value: "24"}
+            - {name: LOG_FORMAT, value: "json"}
+          resources:
+            requests: {cpu: 100m, memory: 96Mi}
+            limits: {cpu: 250m, memory: 192Mi}   # ~20 req/s per pod (CAPACITY_PER_POD)
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+            initialDelaySeconds: 3
+            periodSeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 2
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: tmp
+          emptyDir: {sizeLimit: 16Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: marketplace
+  namespace: costwise
+  labels:
+    app: marketplace
+    app.kubernetes.io/part-of: costwise
+spec:
+  selector:
+    app: marketplace
+  ports:
+    - {name: http, port: 80, targetPort: http}

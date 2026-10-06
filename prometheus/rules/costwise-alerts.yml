@@ -1,0 +1,45 @@
+# Alerting and recording rules for the CostWise demo (validated with `promtool check rules`).
+groups:
+  - name: costwise-recording
+    interval: 5s
+    rules:
+      - record: costwise:marketplace_request_rate:30s
+        expr: sum(rate(marketplace_http_requests_total{route=~"/api/.*"}[30s]))
+      - record: costwise:marketplace_error_ratio:1m
+        expr: |
+          (sum(rate(marketplace_http_requests_total{route=~"/api/.*",status=~"5.."}[1m])) or vector(0))
+            / clamp_min(sum(rate(marketplace_http_requests_total{route=~"/api/.*"}[1m])), 0.001)
+      - record: costwise:marketplace_latency_p95_ms:1m
+        expr: |
+          1000 * histogram_quantile(0.95,
+            sum by (le) (rate(marketplace_http_request_duration_seconds_bucket{route=~"/api/.*"}[1m])))
+  - name: costwise-alerts
+    rules:
+      - alert: MarketplaceNoTargets
+        expr: absent(up{job="marketplace"} == 1)
+        for: 1m
+        labels: {severity: critical}
+        annotations:
+          summary: "No marketplace pod is being scraped"
+          description: "Prometheus sees no healthy marketplace target; CostWise holds the current pods."
+      - alert: MarketplaceHighLatency
+        expr: costwise:marketplace_latency_p95_ms:1m > 500
+        for: 1m
+        labels: {severity: warning}
+        annotations:
+          summary: "Marketplace p95 latency above 500 ms"
+          description: "p95 latency is {{ $value | printf \"%.0f\" }} ms - the store may be under-provisioned."
+      - alert: MarketplaceErrors
+        expr: costwise:marketplace_error_ratio:1m > 0.02
+        for: 1m
+        labels: {severity: warning}
+        annotations:
+          summary: "More than 2% of shop requests fail"
+          description: "Error ratio {{ $value | humanizePercentage }} (HTTP 5xx, including 503 load shedding)."
+      - alert: TrafficGeneratorDown
+        expr: absent(up{job="traffic-generator"} == 1)
+        for: 2m
+        labels: {severity: info}
+        annotations:
+          summary: "Traffic generator not scraped"
+          description: "The demo traffic generator is not running; demo buttons that change traffic will fail."

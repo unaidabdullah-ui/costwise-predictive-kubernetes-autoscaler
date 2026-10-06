@@ -1,0 +1,21 @@
+# Prometheus for running everything as local processes (no Kubernetes):
+#   python -m marketplace            (MARKETPLACE_PORT=8080)
+#   python -m workload_generator     (TARGET_URL=http://127.0.0.1:8080)
+#   prometheus --config.file=prometheus/prometheus-local.yml
+# Also used by docker-compose.yml with the hostnames replaced (see there).
+global:
+  scrape_interval: 5s
+  scrape_timeout: 4s
+  evaluation_interval: 5s
+
+rule_files:
+  - rules/costwise-alerts.yml
+
+scrape_configs:
+  - job_name: marketplace
+    static_configs:
+      - targets: ["127.0.0.1:8080"]
+        labels: {pod: local-marketplace}
+  - job_name: traffic-generator
+    static_configs:
+      - targets: ["127.0.0.1:8089"]
