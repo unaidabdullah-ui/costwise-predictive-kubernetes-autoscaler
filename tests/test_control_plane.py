@@ -89,6 +89,8 @@ def test_faculty_demo_flow(stack):
     assert r["traffic"]["scenario"] == "flash_sale"
     prom.load = 70.0  # Prometheus now measures the rush
     assert wait_for(lambda: rt.scaler.get_replicas() >= 5)
+    # the dashboard reads the cluster from a snapshot refreshed every refresh_seconds
+    assert wait_for(lambda: requests.get(f"{url}/api/dashboard").json()["kubernetes"]["desired_replicas"] >= 5)
     d = requests.get(f"{url}/api/dashboard").json()
     assert d["kubernetes"]["desired_replicas"] >= 5
     assert any(e["category"] == "kubernetes" for e in d["events"])

@@ -169,7 +169,8 @@ class NumpyLSTM:
         arch = np.array([self.n_features, self.hidden_size, self.n_outputs])
         meta = np.array(json.dumps(metadata or {}))
         with path.open("wb") as fh:  # explicit handle: np.savez would append ".npz" to tmp names
-            np.savez(fh, arch=arch, metadata=meta, **self.params)
+            arrays: dict[str, Any] = {"arch": arch, "metadata": meta, **self.params}
+            np.savez(fh, **arrays)
 
     @classmethod
     def load(cls, path: Path) -> tuple[NumpyLSTM, dict[str, Any]]:

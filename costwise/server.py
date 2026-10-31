@@ -34,7 +34,7 @@ from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, PlainTextResponse, Response
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
-from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from autoscaler.config import ConfigError
 from common.jsonutil import to_jsonable
@@ -90,7 +90,7 @@ class SecurityMiddleware:
                 await JSONResponse({"error": "forbidden", "detail": "cross-origin request"}, 403)(scope, receive, send)
                 return
 
-        async def send_wrapper(message: dict[str, Any]) -> None:
+        async def send_wrapper(message: Message) -> None:
             if message["type"] == "http.response.start":
                 hdrs = list(message.get("headers", []))
                 present = {k.lower() for k, _ in hdrs}

@@ -1,5 +1,25 @@
 # COSTWISE — Predictive & Cost-Aware Kubernetes Autoscaling
 
+[![CI](https://github.com/unaidabdullah-ui/costwise-predictive-kubernetes-autoscaler/actions/workflows/ci.yml/badge.svg)](https://github.com/unaidabdullah-ui/costwise-predictive-kubernetes-autoscaler/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+![CostWise control room scaling pods ahead of a flash sale](docs/screenshots/04-flash-scaling.png)
+
+### Results at a glance (flash-sale scenario, simulation)
+
+| | Fixed pods (peak) | Kubernetes HPA | **CostWise** |
+|---|---|---|---|
+| SLA violations | 0 % | 28.5 % | **0 %** |
+| p95 latency | 57 ms | 5,500 ms | **71 ms** |
+| Estimated cost | 5.00 | 3.13 | **2.78** (−44 % vs fixed) |
+
+Same controller code, simulated cluster: [full results and caveats](docs/experiments.md).
+
+**Tech:** Python · NumPy LSTM · Kubernetes · Prometheus · Grafana · Starlette · Docker · Minikube · pytest · GitHub Actions
+
+---
+
 CostWise autoscales a real web application on Kubernetes **before** traffic arrives.
 An LSTM forecasts the next 30 seconds of traffic, a cost optimiser picks the cheapest
 number of pods that can serve it within a budget, and a safety policy applies the
@@ -66,7 +86,7 @@ and is controlled from one dashboard with big buttons (START DEMO, FLASH SALE, �
 Other buttons: **GENERATE USERS** (+300 shoppers), **BUSY TRAFFIC** (gradual rise to
 ~900 shoppers), **RETRAIN MODEL** (really retrains the LSTM, see §10). Press **P** for
 presentation mode (large fonts for a projector), **F** for full screen.
-The step-by-step talk track is in [FACULTY_DEMO.md](FACULTY_DEMO.md).
+The step-by-step talk track is in [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
 
 Screenshots of the control room from the validation run are in
 [docs/screenshots/](docs/screenshots/) (taken in the sandbox described in §17).
@@ -345,7 +365,7 @@ Full report: [docs/TESTING.md](docs/TESTING.md). In short:
 * Limitations: costs are simulated prices, not a cloud bill; the forecast cannot
   anticipate a burst with no warning (safe mode/reactive behaviour then applies); one
   Minikube node, so "pods" share the laptop's CPU; orders live in pod memory.
-* Further reading: [FACULTY_DEMO.md](FACULTY_DEMO.md) · [ARCHITECTURE.md](ARCHITECTURE.md) ·
+* Further reading: [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) · [ARCHITECTURE.md](ARCHITECTURE.md) ·
   [docs/methodology.md](docs/methodology.md) · [docs/ml-model.md](docs/ml-model.md) ·
   [docs/cost-optimization.md](docs/cost-optimization.md) · [docs/kubernetes.md](docs/kubernetes.md) ·
   [docs/experiments.md](docs/experiments.md) · [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) ·

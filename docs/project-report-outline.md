@@ -22,4 +22,4 @@
 11. **Conclusion.**
 
 Appendices: configuration reference (.env.example), RBAC manifest, API reference,
-FACULTY_DEMO.md script.
+DEMO_SCRIPT.md script.
