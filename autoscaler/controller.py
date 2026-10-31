@@ -253,7 +253,7 @@ class AutoscalerController:
             if not str(exc).startswith("warming up"):
                 record.errors.append(f"prediction: {exc}")
             # an untrusted forecast stays visible on the chart, but planning uses the measured load
-            planning = np.full(max(1, self.predictor.horizon), snapshot.request_rate)
+            planning: np.ndarray = np.full(max(1, self.predictor.horizon), snapshot.request_rate)
         else:
             planning = forecast
         record.prediction_next = float(record.forecast[0]) if record.forecast else None

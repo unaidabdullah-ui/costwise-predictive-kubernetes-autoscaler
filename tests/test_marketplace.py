@@ -41,6 +41,8 @@ def test_cart_cookie_roundtrip_ignores_garbage():
 def test_shopping_flow_and_metrics():
     with serve(create_app(settings())) as url:
         s = requests.Session()
+        # the metrics registry is process-wide, so earlier tests may already have placed orders
+        m0 = parse_samples(s.get(f"{url}/metrics").text)
         assert s.get(f"{url}/health").json()["status"] == "ok"
         assert len(s.get(f"{url}/api/products?limit=5").json()["items"]) == 5
         assert s.get(f"{url}/products?category=books").json()["total"] == 6  # alias without /api
@@ -59,8 +61,9 @@ def test_shopping_flow_and_metrics():
         assert s.get(f"{url}/api/orders").json()["items"][0]["order_id"] == order["order_id"]
         assert s.get(f"{url}/").status_code == 200 and "COSTWISE" in s.get(f"{url}/").text.upper()
         m = parse_samples(s.get(f"{url}/metrics").text)
-        assert m['marketplace_http_requests_total{route="/api/checkout",method="POST",status="201"}'] == 1
-        assert m["marketplace_orders_total"] == 1
+        checkouts = 'marketplace_http_requests_total{route="/api/checkout",method="POST",status="201"}'
+        assert m[checkouts] - m0.get(checkouts, 0) == 1
+        assert m["marketplace_orders_total"] - m0.get("marketplace_orders_total", 0) == 1
 
 
 def test_overload_sheds_with_503():
